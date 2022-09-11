@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Row, RowDefault, RowSchema, RowSchemaOutputType } from "./Row";
+import { renderWithReactHookForm } from "../../utils/renderWithReactHookForm";
 
 describe("Row validation schema", () => {
   test("sec_id: missing input", () => {
@@ -105,13 +107,18 @@ describe("Row validation schema", () => {
   });
 
   test("default values", () => {
-    expect(RowDefault).toStrictEqual({ sec_id: "", weight: "", resolved_id: null, proxy_id: null });
+    expect(RowDefault).toStrictEqual({ sec_id: "", weight: "", resolved_id: "", proxy_id: "" });
   });
 });
 
 describe("Row component", () => {
   test("renders component with fields", () => {
-    render(<Row />);
+    const queryClient = new QueryClient();
+    renderWithReactHookForm(
+      <QueryClientProvider client={queryClient}>
+        <Row />
+      </QueryClientProvider>
+    );
     expect(screen.getByPlaceholderText("sec_id")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("weight")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("resolved_id")).toBeInTheDocument();

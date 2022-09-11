@@ -1,3 +1,10 @@
+# Project setup after cloning the repo
+
+- Install dependencies `npm i`
+- Run `npm run json.server` in order to start the mock backend
+- Run in a separate terminal `npm run init.data` in order to create mock data
+- Run `npm start` to start the development server
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { useFormContext } from "react-hook-form";
-import { FormControl, Input, Grid } from "@mui/material";
+import { Controller, useFormContext } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { FormControl, Input, Grid, CircularProgress } from "@mui/material";
+import { resolveId } from "../../utils/client";
 
 const RowSchema = z
   .object({
@@ -33,37 +35,66 @@ type RowSchemaOutputType = z.output<typeof RowSchema>;
 const RowDefault = {
   sec_id: "",
   weight: "",
-  resolved_id: null,
-  proxy_id: null,
+  resolved_id: "",
+  proxy_id: "",
 };
 
 function Row() {
-  // const { control } = useFormContext<RowSchemaInputType>();
+  const { control, watch, setValue } = useFormContext<RowSchemaInputType>();
+  const watchSecId = watch("sec_id");
+  const query = useQuery(["sec-map", watchSecId], () => resolveId(watchSecId));
+
+  console.log(watchSecId);
+  console.log(query.data?.data);
+
+  setValue("resolved_id", query.data?.data.resolved_id || "");
+
   return (
     <Grid container>
       <Grid item>
         <FormControl>
-          <Input placeholder="sec_id" />
+          <Controller
+            control={control}
+            name="sec_id"
+            defaultValue=""
+            render={({ field }) => <Input placeholder="sec_id" {...field} />}
+          />
         </FormControl>
       </Grid>
       <Grid item>
         <FormControl>
-          <Input placeholder="weight" />
+          <Controller
+            control={control}
+            name="weight"
+            defaultValue=""
+            render={({ field }) => <Input placeholder="weight" {...field} />}
+          />
         </FormControl>
       </Grid>
       <Grid item>
         <FormControl>
-          <Input placeholder="resolved_id" />
+          <Controller
+            control={control}
+            name="resolved_id"
+            defaultValue=""
+            render={({ field }) => <Input placeholder="resolved_id" {...field} />}
+          />
         </FormControl>
       </Grid>
       <Grid item>
         <FormControl>
-          <Input placeholder="proxy_id" />
+          <Controller
+            control={control}
+            name="proxy_id"
+            defaultValue=""
+            render={({ field }) => <Input placeholder="proxy_id" {...field} />}
+          />
         </FormControl>
       </Grid>
+      <Grid item>{(query.isFetching || query.isLoading) && <CircularProgress size={20} />}</Grid>
     </Grid>
   );
 }
 
 export type { RowSchemaInputType, RowSchemaOutputType };
-export { Row, RowSchema, RowDefault };
+export { Row, RowSchema, RowDefault, resolveId };
