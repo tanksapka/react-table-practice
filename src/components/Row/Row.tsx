@@ -39,15 +39,15 @@ const RowDefault = {
   proxy_id: "",
 };
 
-function Row() {
-  const { control, watch, setValue } = useFormContext<RowSchemaInputType>();
-  const watchSecId = watch("sec_id");
-  const query = useQuery(["sec-map", watchSecId], () => resolveId(watchSecId));
+function Row({ index }: { index: number }) {
+  const { control, watch, setValue } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
+  // const watchSecId = watch("sec_id");
+  // const query = useQuery(["sec-map", watchSecId], () => resolveId(watchSecId));
 
-  console.log(watchSecId);
-  console.log(query.data?.data);
+  // console.log(watchSecId);
+  // console.log(query.data?.data);
 
-  setValue("resolved_id", query.data?.data.resolved_id || "");
+  // setValue("resolved_id", query.data?.data.resolved_id || "");
 
   return (
     <Grid container>
@@ -55,7 +55,7 @@ function Row() {
         <FormControl>
           <Controller
             control={control}
-            name="sec_id"
+            name={`sec_list.${index}.sec_id` as const}
             defaultValue=""
             render={({ field }) => <Input placeholder="sec_id" {...field} />}
           />
@@ -65,7 +65,7 @@ function Row() {
         <FormControl>
           <Controller
             control={control}
-            name="weight"
+            name={`sec_list.${index}.weight` as const}
             defaultValue=""
             render={({ field }) => <Input placeholder="weight" {...field} />}
           />
@@ -75,7 +75,7 @@ function Row() {
         <FormControl>
           <Controller
             control={control}
-            name="resolved_id"
+            name={`sec_list.${index}.resolved_id` as const}
             defaultValue=""
             render={({ field }) => <Input placeholder="resolved_id" {...field} />}
           />
@@ -85,13 +85,13 @@ function Row() {
         <FormControl>
           <Controller
             control={control}
-            name="proxy_id"
+            name={`sec_list.${index}.proxy_id` as const}
             defaultValue=""
             render={({ field }) => <Input placeholder="proxy_id" {...field} />}
           />
         </FormControl>
       </Grid>
-      <Grid item>{(query.isFetching || query.isLoading) && <CircularProgress size={20} />}</Grid>
+      {/* <Grid item>{(query.isFetching || query.isLoading) && <CircularProgress size={20} />}</Grid> */}
     </Grid>
   );
 }

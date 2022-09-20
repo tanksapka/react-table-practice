@@ -1,15 +1,25 @@
-import { FormProvider, useForm, useFormContext } from "react-hook-form";
+import { FormProvider, useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Row, RowDefault, RowSchema, RowSchemaInputType } from "./components/Row/Row";
+import { Row, RowSchema } from "./components/Row/Row";
 import { Box, Button, Container, Typography } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { resolveId } from "./utils/client";
+import { z } from "zod";
+import { generateRowItmes } from "./dummy-data/generate-row-items";
 
 const queryClient = new QueryClient();
 
+const tableSchema = z.object({
+  sec_list: z.array(RowSchema),
+});
+
 function App() {
-  const methods = useForm<RowSchemaInputType>({ defaultValues: RowDefault, resolver: zodResolver(RowSchema) });
+  const methods = useForm<z.input<typeof tableSchema>>({
+    defaultValues: { sec_list: [...generateRowItmes()] },
+    resolver: zodResolver(tableSchema),
+  });
+
   return (
     <QueryClientProvider client={queryClient}>
       <FormProvider {...methods}>
@@ -26,18 +36,24 @@ function App() {
 }
 
 function TableWrapper() {
-  const { handleSubmit, getValues } = useFormContext<RowSchemaInputType>();
+  /*
+  - TODO: use useQueries to fetch resolution data from json server, hand over results to Row object
+  */
+  const { control, handleSubmit } = useFormContext<z.input<typeof tableSchema>>();
+  const rowList = useFieldArray({ control, name: "sec_list" });
 
   return (
     <>
       <form onSubmit={handleSubmit((data) => console.log(data))}>
-        <Row />
+        {rowList.fields.map((_, index) => (
+          <Row key={index} index={index} />
+        ))}
       </form>
-      <Box mt={5}>
+      {/* <Box mt={5}>
         <Button variant="contained" onClick={() => resolveId(getValues("sec_id"))}>
           Resolve ids
         </Button>
-      </Box>
+      </Box> */}
     </>
   );
 }

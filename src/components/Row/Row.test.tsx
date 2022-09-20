@@ -116,7 +116,7 @@ describe("Row component", () => {
     const queryClient = new QueryClient();
     renderWithReactHookForm(
       <QueryClientProvider client={queryClient}>
-        <Row />
+        <Row index={0} />
       </QueryClientProvider>
     );
     expect(screen.getByPlaceholderText("sec_id")).toBeInTheDocument();
