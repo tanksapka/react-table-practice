@@ -2,7 +2,7 @@ import { FormProvider, useFieldArray, useForm, useFormContext } from "react-hook
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Row, RowSchema } from "./components/Row/Row";
 import { Box, Button, Container, Typography } from "@mui/material";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueries } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { resolveId } from "./utils/client";
 import { z } from "zod";
@@ -36,11 +36,11 @@ function App() {
 }
 
 function TableWrapper() {
-  /*
-  - TODO: use useQueries to fetch resolution data from json server, hand over results to Row object
-  */
   const { control, handleSubmit } = useFormContext<z.input<typeof tableSchema>>();
   const rowList = useFieldArray({ control, name: "sec_list" });
+  const secQueries = useQueries({
+    queries: rowList.fields.map((sec) => ({ queryKey: ["sec_id", sec.sec_id], queryFn: () => resolveId(sec.sec_id) })),
+  });
 
   return (
     <>

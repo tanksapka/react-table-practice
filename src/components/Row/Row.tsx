@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { Controller, useFormContext } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { FormControl, Input, Grid, CircularProgress } from "@mui/material";
-import { resolveId } from "../../utils/client";
+import { resolveId, SecMapResponse } from "../../utils/client";
+import { AxiosResponse } from "axios";
 
 const RowSchema = z
   .object({
@@ -40,14 +41,13 @@ const RowDefault = {
 };
 
 function Row({ index }: { index: number }) {
-  const { control, watch, setValue } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
-  // const watchSecId = watch("sec_id");
-  // const query = useQuery(["sec-map", watchSecId], () => resolveId(watchSecId));
+  const { control, setValue } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
+  const queryClient = useQueryClient();
+  const queryKey = ["sec_id", `sec_id_00${index}`];
+  const query = queryClient.getQueryData<AxiosResponse<SecMapResponse, any>>(queryKey);
+  const isFetching = queryClient.isFetching(queryKey) > 0;
 
-  // console.log(watchSecId);
-  // console.log(query.data?.data);
-
-  // setValue("resolved_id", query.data?.data.resolved_id || "");
+  !isFetching && setValue(`sec_list.${index}.resolved_id`, query?.data.resolved_id || "");
 
   return (
     <Grid container>
@@ -91,7 +91,7 @@ function Row({ index }: { index: number }) {
           />
         </FormControl>
       </Grid>
-      {/* <Grid item>{(query.isFetching || query.isLoading) && <CircularProgress size={20} />}</Grid> */}
+      <Grid item>{isFetching && <CircularProgress size={20} />}</Grid>
     </Grid>
   );
 }
