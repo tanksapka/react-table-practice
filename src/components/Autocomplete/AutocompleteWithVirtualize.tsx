@@ -15,7 +15,7 @@ import { generateRowItems, SecItem } from "../../dummy-data/generate-row-items";
 
 const LISTBOX_PADDING = 8; // px
 
-function renderRow(props: ListChildComponentProps) {
+function renderSecRow(props: ListChildComponentProps) {
   const { data, index, style } = props;
   const dataSet = data[index];
   const inlineStyle = {
@@ -62,13 +62,12 @@ interface SecGroup {
 }
 
 // Adapter for react-window
-const ListboxComponent = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLElement>>(function ListboxComponent(
-  props,
-  ref
-) {
+const ListboxComponent = forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLElement> & { renderRow: (params: ListChildComponentProps) => JSX.Element }
+>(function ListboxComponent({ renderRow, ...props }, ref) {
   const { children, ...other } = props;
   const itemData: (SecGroup | [ReactNode, SecItem])[] = [];
-  console.log(children);
   (children as SecGroup[]).forEach((item) => {
     itemData.push(item);
     itemData.push(...(item.children || []));
@@ -137,7 +136,7 @@ function AutocompleteWithVirtualize() {
       id="virtualize-demo"
       disableListWrap
       PopperComponent={StyledPopper}
-      ListboxComponent={ListboxComponent}
+      ListboxComponent={(listboxProps) => <ListboxComponent {...listboxProps} renderRow={renderSecRow} />}
       options={secList}
       isOptionEqualToValue={(option, value) => option.sec_id === value.sec_id}
       getOptionLabel={(option) => option.sec_id}
