@@ -10,7 +10,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { createContext, forwardRef, ReactNode, useContext, useEffect, useRef } from "react";
+import { createContext, forwardRef, HTMLAttributes, ReactNode, Ref, useContext, useEffect, useRef } from "react";
 import { generateRowItems, SecItem } from "../../dummy-data/generate-row-items";
 
 const LISTBOX_PADDING = 8; // px
@@ -136,12 +136,16 @@ function AutocompleteWithVirtualize() {
       id="virtualize-demo"
       disableListWrap
       PopperComponent={StyledPopper}
-      ListboxComponent={(listboxProps) => <ListboxComponent {...listboxProps} renderRow={renderSecRow} />}
+      ListboxComponent={forwardRef(
+        (listboxProps: HTMLAttributes<HTMLElement>, ref: Ref<HTMLDivElement> | undefined) => (
+          <ListboxComponent {...listboxProps} ref={ref} renderRow={renderSecRow} />
+        )
+      )}
       options={secList}
       isOptionEqualToValue={(option, value) => option.sec_id === value.sec_id}
       getOptionLabel={(option) => option.sec_id}
       groupBy={(option) => option.sec_id[0].toUpperCase()}
-      renderInput={(params) => <TextField {...params} label="10,000 options" />}
+      renderInput={(params) => <TextField {...params} placeholder="Enter security id..." label="10,000 options" />}
       renderOption={(props, option) => [props, option] as React.ReactNode}
       // TODO: Post React 18 update - validate this conversion, look like a hidden bug
       renderGroup={(params) => params as unknown as React.ReactNode}
