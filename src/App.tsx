@@ -41,8 +41,11 @@ function App() {
 function TableWrapper() {
   const { control, handleSubmit } = useFormContext<z.input<typeof tableSchema>>();
   const rowList = useFieldArray({ control, name: "sec_list" });
-  const secQueries = useQueries({
-    queries: rowList.fields.map((sec) => ({ queryKey: ["sec_id", sec.sec_id], queryFn: () => resolveId(sec.sec_id) })),
+  useQueries({
+    queries: rowList.fields.map((sec) => ({
+      queryKey: ["sec_id", sec.sec_id],
+      queryFn: () => resolveId(sec.sec_id),
+    })),
   });
 
   return (

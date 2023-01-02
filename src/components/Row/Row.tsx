@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { Controller, useFormContext } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { FormControl, Input, Grid, CircularProgress } from "@mui/material";
+import { FormControl, Input, Grid, CircularProgress, IconButton } from "@mui/material";
 import { resolveId, SecMapResponse } from "../../utils/client";
 import { AxiosResponse } from "axios";
+import { Refresh } from "@mui/icons-material";
 
 const RowSchema = z
   .object({
@@ -41,13 +42,11 @@ const RowDefault = {
 };
 
 function Row({ index }: { index: number }) {
-  const { control, setValue } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
+  const { control } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
   const queryClient = useQueryClient();
   const queryKey = ["sec_id", `sec_id_00${index}`];
   const query = queryClient.getQueryData<AxiosResponse<SecMapResponse, any>>(queryKey);
   const isFetching = queryClient.isFetching(queryKey) > 0;
-
-  !isFetching && setValue(`sec_list.${index}.resolved_id`, query?.data.resolved_id || "");
 
   return (
     <Grid container>
@@ -77,7 +76,13 @@ function Row({ index }: { index: number }) {
             control={control}
             name={`sec_list.${index}.resolved_id` as const}
             defaultValue=""
-            render={({ field }) => <Input placeholder="resolved_id" {...field} />}
+            render={({ field }) => (
+              <Input
+                placeholder="resolved_id"
+                {...field}
+                value={field.value === "" ? query?.data.resolved_id || "" : field.value}
+              />
+            )}
           />
         </FormControl>
       </Grid>
@@ -91,7 +96,20 @@ function Row({ index }: { index: number }) {
           />
         </FormControl>
       </Grid>
-      <Grid item>{isFetching && <CircularProgress size={20} />}</Grid>
+      <Grid item>
+        {isFetching ? (
+          <CircularProgress size={20} />
+        ) : (
+          <IconButton
+            onClick={() =>
+              // TODO: this won't have any effect if user edits the resolved id
+              queryClient.refetchQueries({ queryKey: ["sec_id", `sec_id_00${index}`], type: "active", exact: true })
+            }
+          >
+            <Refresh color="primary" />
+          </IconButton>
+        )}
+      </Grid>
     </Grid>
   );
 }
