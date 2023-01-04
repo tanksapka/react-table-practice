@@ -49,7 +49,7 @@ function TableWrapper() {
   });
 
   return (
-    <>
+    <Container maxWidth="md">
       <form onSubmit={handleSubmit((data) => console.log(data))}>
         <Grid container rowGap="2rem">
           <Grid item width="100%">
@@ -82,7 +82,7 @@ function TableWrapper() {
           Resolve ids
         </Button>
       </Box> */}
-    </>
+    </Container>
   );
 }
 

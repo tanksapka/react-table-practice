@@ -1,20 +1,15 @@
 import { z } from "zod";
 import { Controller, useFormContext } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
-import { FormControl, Input, Grid, CircularProgress, IconButton } from "@mui/material";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { FormControl, Input, Grid, CircularProgress, IconButton, Box } from "@mui/material";
 import { resolveId, SecMapResponse } from "../../utils/client";
 import { AxiosResponse } from "axios";
 import { Refresh } from "@mui/icons-material";
+import { useEffect, useState } from "react";
 
 const RowSchema = z
   .object({
     sec_id: z.string({ required_error: "Security id is required!" }).trim().min(1, "Security id is required!"),
-    weight: z
-      .string({ required_error: "Weight is required!" })
-      .trim()
-      .regex(/[+-]?([0-9]*[.])?[0-9]+/, "Invalid value for weight!")
-      .transform((val) => parseFloat(val))
-      .refine((val) => val !== 0.0, "Weight has to be non-zero!"),
     resolved_id: z
       .string()
       .trim()
@@ -36,58 +31,57 @@ type RowSchemaOutputType = z.output<typeof RowSchema>;
 
 const RowDefault = {
   sec_id: "",
-  weight: "",
   resolved_id: "",
   proxy_id: "",
 };
 
 function Row({ index }: { index: number }) {
-  const { control } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
+  const { control, watch } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
+  const proxyWatch = watch(`sec_list.${index}.proxy_id` as const);
+
   const queryClient = useQueryClient();
-  const queryKey = ["sec_id", `sec_id_00${index}`];
-  const query = queryClient.getQueryData<AxiosResponse<SecMapResponse, any>>(queryKey);
-  const isFetching = queryClient.isFetching(queryKey) > 0;
+  const secQueryKey = ["sec_id", `sec_id_00${index}`];
+  const secQuery = queryClient.getQueryData<AxiosResponse<SecMapResponse, any>>(secQueryKey);
+  const secIsFetching = queryClient.isFetching(secQueryKey) > 0;
+
+  const proxyQueryKey = ["sec_id", `proxy_id_00${index}`];
+  const [proxyState, setProxyState] = useState(false);
+  const proxyQuery = useQuery({
+    queryKey: proxyQueryKey,
+    queryFn: () => resolveId(proxyWatch as string),
+    enabled: proxyState,
+  });
+
+  const resolvedId = !!proxyWatch ? proxyQuery.data?.data.resolved_id || "" : secQuery?.data.resolved_id || "";
+
+  useEffect(() => {
+    if (!proxyWatch) setProxyState(false);
+  }, [proxyWatch]);
 
   return (
-    <Grid container>
-      <Grid item>
-        <FormControl>
+    <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
+      <Grid item xs={1} sm={2} md={4}>
+        <FormControl fullWidth>
           <Controller
             control={control}
             name={`sec_list.${index}.sec_id` as const}
             defaultValue=""
-            render={({ field }) => <Input placeholder="sec_id" {...field} />}
+            render={({ field }) => <Input placeholder="sec_id" readOnly {...field} />}
           />
         </FormControl>
       </Grid>
-      <Grid item>
-        <FormControl>
-          <Controller
-            control={control}
-            name={`sec_list.${index}.weight` as const}
-            defaultValue=""
-            render={({ field }) => <Input placeholder="weight" {...field} />}
-          />
-        </FormControl>
-      </Grid>
-      <Grid item>
-        <FormControl>
+      <Grid item xs={1} sm={2} md={4}>
+        <FormControl fullWidth>
           <Controller
             control={control}
             name={`sec_list.${index}.resolved_id` as const}
             defaultValue=""
-            render={({ field }) => (
-              <Input
-                placeholder="resolved_id"
-                {...field}
-                value={field.value === "" ? query?.data.resolved_id || "" : field.value}
-              />
-            )}
+            render={({ field }) => <Input placeholder="resolved_id" readOnly {...field} value={resolvedId} />}
           />
         </FormControl>
       </Grid>
-      <Grid item>
-        <FormControl>
+      <Grid item xs={1} sm={2} md={3}>
+        <FormControl fullWidth>
           <Controller
             control={control}
             name={`sec_list.${index}.proxy_id` as const}
@@ -96,17 +90,21 @@ function Row({ index }: { index: number }) {
           />
         </FormControl>
       </Grid>
-      <Grid item>
-        {isFetching ? (
-          <CircularProgress size={20} />
+      <Grid item xs={1} sm={2} md={1}>
+        {secIsFetching ? (
+          <Box p="6px">
+            <CircularProgress size={18} />
+          </Box>
         ) : (
           <IconButton
-            onClick={() =>
-              // TODO: this won't have any effect if user edits the resolved id
-              queryClient.refetchQueries({ queryKey: ["sec_id", `sec_id_00${index}`], type: "active", exact: true })
-            }
+            disabled={!proxyWatch}
+            onClick={() => {
+              setProxyState(true);
+              proxyQuery.refetch();
+            }}
+            size="small"
           >
-            <Refresh color="primary" />
+            <Refresh color={!!proxyWatch ? "primary" : "disabled"} />
           </IconButton>
         )}
       </Grid>
