@@ -7,24 +7,15 @@ import { AxiosResponse } from "axios";
 import { Refresh } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 
-const RowSchema = z
-  .object({
-    sec_id: z.string({ required_error: "Security id is required!" }).trim().min(1, "Security id is required!"),
-    resolved_id: z
-      .string()
-      .trim()
-      .transform((val) => (val === "" ? null : val))
-      .nullable(),
-    proxy_id: z
-      .string()
-      .trim()
-      .transform((val) => (val === "" ? null : val))
-      .nullable(),
-  })
-  .refine((row) => row.resolved_id !== null || row.proxy_id !== null, {
-    message: "Either Resolved id or Proxy id has to be provided!",
-    path: ["resolved_id"],
-  });
+const RowSchema = z.object({
+  sec_id: z.string({ required_error: "Security id is required!" }).trim().min(1, "Security id is required!"),
+  resolved_id: z.string().trim().min(1, "Resolved is has to be provided"),
+  proxy_id: z
+    .string()
+    .trim()
+    .transform((val) => (val === "" ? null : val))
+    .nullable(),
+});
 
 type RowSchemaInputType = z.input<typeof RowSchema>;
 type RowSchemaOutputType = z.output<typeof RowSchema>;
@@ -36,7 +27,7 @@ const RowDefault = {
 };
 
 function Row({ index }: { index: number }) {
-  const { control, watch } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
+  const { control, setValue, watch } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
   const proxyWatch = watch(`sec_list.${index}.proxy_id` as const);
 
   const queryClient = useQueryClient();
@@ -52,7 +43,14 @@ function Row({ index }: { index: number }) {
     enabled: proxyState,
   });
 
-  const resolvedId = !!proxyWatch ? proxyQuery.data?.data.resolved_id || "" : secQuery?.data.resolved_id || "";
+  useEffect(
+    () =>
+      setValue(
+        `sec_list.${index}.resolved_id` as const,
+        !!proxyWatch ? proxyQuery.data?.data.resolved_id || "" : secQuery?.data.resolved_id || ""
+      ),
+    [setValue, index, proxyWatch, proxyQuery.data, secQuery?.data]
+  );
 
   useEffect(() => {
     if (!proxyWatch) setProxyState(false);
@@ -61,7 +59,7 @@ function Row({ index }: { index: number }) {
   return (
     <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
       <Grid item xs={1} sm={2} md={4}>
-        <FormControl fullWidth>
+        <FormControl fullWidth sx={{ py: "1px" }}>
           <Controller
             control={control}
             name={`sec_list.${index}.sec_id` as const}
@@ -71,22 +69,22 @@ function Row({ index }: { index: number }) {
         </FormControl>
       </Grid>
       <Grid item xs={1} sm={2} md={4}>
-        <FormControl fullWidth>
+        <FormControl fullWidth sx={{ py: "1px" }}>
           <Controller
             control={control}
             name={`sec_list.${index}.resolved_id` as const}
             defaultValue=""
-            render={({ field }) => <Input placeholder="resolved_id" readOnly {...field} value={resolvedId} />}
+            render={({ field }) => <Input placeholder="resolved_id" readOnly {...field} />}
           />
         </FormControl>
       </Grid>
       <Grid item xs={1} sm={2} md={3}>
-        <FormControl fullWidth>
+        <FormControl fullWidth sx={{ py: "1px" }}>
           <Controller
             control={control}
             name={`sec_list.${index}.proxy_id` as const}
             defaultValue=""
-            render={({ field }) => <Input placeholder="proxy_id" {...field} />}
+            render={({ field }) => <Input placeholder="proxy_id" {...field} autoComplete="off" />}
           />
         </FormControl>
       </Grid>
@@ -103,8 +101,9 @@ function Row({ index }: { index: number }) {
               proxyQuery.refetch();
             }}
             size="small"
+            title="Resolve id"
           >
-            <Refresh color={!!proxyWatch ? "primary" : "disabled"} />
+            <Refresh color={!!proxyWatch ? "secondary" : "disabled"} />
           </IconButton>
         )}
       </Grid>

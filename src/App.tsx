@@ -1,8 +1,8 @@
 import { FormProvider, useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Row, RowSchema } from "./components/Row/Row";
-import { Container, Grid, Typography } from "@mui/material";
-import { QueryClient, QueryClientProvider, useQueries } from "@tanstack/react-query";
+import { Box, Button, Container, Grid, Typography } from "@mui/material";
+import { QueryClient, QueryClientProvider, useQueries, useQueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { resolveId } from "./utils/client";
 import { z } from "zod";
@@ -41,6 +41,7 @@ function App() {
 function TableWrapper() {
   const { control, handleSubmit } = useFormContext<z.input<typeof tableSchema>>();
   const rowList = useFieldArray({ control, name: "sec_list" });
+  const queryClient = useQueryClient();
   useQueries({
     queries: rowList.fields.map((sec) => ({
       queryKey: ["sec_id", sec.sec_id],
@@ -76,12 +77,15 @@ function TableWrapper() {
             ))}
           </Grid>
         </Grid>
+        <Box mt={5} display="flex" justifyContent="space-between">
+          <Button variant="contained" color="secondary" onClick={() => queryClient.refetchQueries()}>
+            Resolve ids
+          </Button>
+          <Button type="submit" variant="contained">
+            Submit
+          </Button>
+        </Box>
       </form>
-      {/* <Box mt={5}>
-        <Button variant="contained" onClick={() => resolveId(getValues("sec_id"))}>
-          Resolve ids
-        </Button>
-      </Box> */}
     </Container>
   );
 }

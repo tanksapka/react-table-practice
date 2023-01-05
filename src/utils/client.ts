@@ -5,6 +5,7 @@ const apiClient = axios.create({
   headers: {
     "Content-type": "application/json",
   },
+  validateStatus: (status: number) => (status >= 200 && status < 300) || status === 404,
 });
 
 interface SecMapResponse {
