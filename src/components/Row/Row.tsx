@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { Controller, useFormContext } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FormControl, Input, Grid, CircularProgress, IconButton, Box } from "@mui/material";
+import { FormControl, Input, Grid, CircularProgress, IconButton, Box, Typography } from "@mui/material";
 import { resolveId, SecMapResponse } from "../../utils/client";
 import { AxiosResponse } from "axios";
-import { Refresh } from "@mui/icons-material";
+import { CheckCircleOutline, ErrorOutline, Refresh } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 
 const RowSchema = z.object({
@@ -28,6 +28,7 @@ const RowDefault = {
 
 function Row({ index }: { index: number }) {
   const { control, setValue, watch } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
+  const resolvedIdWatch = watch(`sec_list.${index}.resolved_id` as const);
   const proxyWatch = watch(`sec_list.${index}.proxy_id` as const);
 
   const queryClient = useQueryClient();
@@ -53,61 +54,87 @@ function Row({ index }: { index: number }) {
   );
 
   useEffect(() => {
-    if (!proxyWatch) setProxyState(false);
+    !proxyWatch ? setProxyState(false) : setProxyState(true);
   }, [proxyWatch]);
 
   return (
-    <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
-      <Grid item xs={1} sm={2} md={4}>
-        <FormControl fullWidth sx={{ py: "1px" }}>
-          <Controller
-            control={control}
-            name={`sec_list.${index}.sec_id` as const}
-            defaultValue=""
-            render={({ field }) => <Input placeholder="sec_id" readOnly {...field} />}
-          />
-        </FormControl>
-      </Grid>
-      <Grid item xs={1} sm={2} md={4}>
-        <FormControl fullWidth sx={{ py: "1px" }}>
-          <Controller
-            control={control}
-            name={`sec_list.${index}.resolved_id` as const}
-            defaultValue=""
-            render={({ field }) => <Input placeholder="resolved_id" readOnly {...field} />}
-          />
-        </FormControl>
-      </Grid>
-      <Grid item xs={1} sm={2} md={3}>
-        <FormControl fullWidth sx={{ py: "1px" }}>
-          <Controller
-            control={control}
-            name={`sec_list.${index}.proxy_id` as const}
-            defaultValue=""
-            render={({ field }) => <Input placeholder="proxy_id" {...field} autoComplete="off" />}
-          />
-        </FormControl>
-      </Grid>
-      <Grid item xs={1} sm={2} md={1}>
-        {secIsFetching ? (
-          <Box p="6px">
-            <CircularProgress size={18} />
+    <>
+      {index === 0 && (
+        <Grid container columns={{ xs: 4, sm: 8, md: 12 }} sx={{ borderBottom: "1px solid rgba(0, 0, 0, 0.42)}" }}>
+          <Grid item xs={1} sm={2} md={4}>
+            <Typography textAlign="center">Security Id</Typography>
+          </Grid>
+          <Grid item xs={1} sm={2} md={3}>
+            <Typography textAlign="center">Resolved Id</Typography>
+          </Grid>
+          <Grid item xs={1} sm={2} md={3}>
+            <Typography textAlign="center">Proxy Id</Typography>
+          </Grid>
+          <Grid item xs={1} sm={1} md={1}>
+            <Typography textAlign="center">Status</Typography>
+          </Grid>
+          <Grid item xs={1} sm={1} md={1}>
+            <Typography textAlign="center">Refresh</Typography>
+          </Grid>
+        </Grid>
+      )}
+      <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
+        <Grid item xs={1} sm={2} md={4}>
+          <FormControl fullWidth sx={{ py: "1px" }}>
+            <Controller
+              control={control}
+              name={`sec_list.${index}.sec_id` as const}
+              defaultValue=""
+              render={({ field }) => <Input placeholder="sec_id" readOnly {...field} />}
+            />
+          </FormControl>
+        </Grid>
+        <Grid item xs={1} sm={2} md={3}>
+          <FormControl fullWidth sx={{ py: "1px" }}>
+            <Controller
+              control={control}
+              name={`sec_list.${index}.resolved_id` as const}
+              defaultValue=""
+              render={({ field }) => <Input placeholder="resolved_id" readOnly {...field} />}
+            />
+          </FormControl>
+        </Grid>
+        <Grid item xs={1} sm={2} md={3}>
+          <FormControl fullWidth sx={{ py: "1px" }}>
+            <Controller
+              control={control}
+              name={`sec_list.${index}.proxy_id` as const}
+              defaultValue=""
+              render={({ field }) => <Input placeholder="proxy_id" {...field} autoComplete="off" />}
+            />
+          </FormControl>
+        </Grid>
+        <Grid item xs={1} sm={1} md={1}>
+          <Box display="flex" p="4px" justifyContent="center" borderBottom="1px solid rgba(0, 0, 0, 0.42)}">
+            {!!resolvedIdWatch ? <CheckCircleOutline color="success" /> : <ErrorOutline color="error" />}
           </Box>
-        ) : (
-          <IconButton
-            disabled={!proxyWatch}
-            onClick={() => {
-              setProxyState(true);
-              proxyQuery.refetch();
-            }}
-            size="small"
-            title="Resolve id"
-          >
-            <Refresh color={!!proxyWatch ? "secondary" : "disabled"} />
-          </IconButton>
-        )}
+        </Grid>
+        <Grid item xs={1} sm={1} md={1}>
+          <Box display="flex" justifyContent="center" borderBottom="1px solid rgba(0, 0, 0, 0.42)}">
+            {secIsFetching ? (
+              <Box p="5px">
+                <CircularProgress size={18} />
+              </Box>
+            ) : (
+              <IconButton
+                disabled={!proxyWatch}
+                onClick={() => proxyQuery.refetch()}
+                size="small"
+                title="Resolve id"
+                sx={{ p: "4px" }}
+              >
+                <Refresh color={!!proxyWatch ? "secondary" : "disabled"} />
+              </IconButton>
+            )}
+          </Box>
+        </Grid>
       </Grid>
-    </Grid>
+    </>
   );
 }
 
