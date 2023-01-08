@@ -27,7 +27,7 @@ const RowDefault = {
 };
 
 function Row({ index }: { index: number }) {
-  const { control, setValue, watch } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
+  const { control, getValues, setValue, watch } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
   const resolvedIdWatch = watch(`sec_list.${index}.resolved_id` as const);
   const proxyWatch = watch(`sec_list.${index}.proxy_id` as const);
 
@@ -40,7 +40,7 @@ function Row({ index }: { index: number }) {
   const [proxyState, setProxyState] = useState(false);
   const proxyQuery = useQuery({
     queryKey: proxyQueryKey,
-    queryFn: () => resolveId(proxyWatch as string),
+    queryFn: () => resolveId(getValues().sec_list[index].proxy_id as string),
     enabled: proxyState,
   });
 
@@ -50,12 +50,8 @@ function Row({ index }: { index: number }) {
         `sec_list.${index}.resolved_id` as const,
         !!proxyWatch ? proxyQuery.data?.data.resolved_id || "" : secQuery?.data.resolved_id || ""
       ),
-    [setValue, index, proxyWatch, proxyQuery.data, secQuery?.data]
+    [setValue, index, proxyWatch, proxyQuery.data?.data.resolved_id, secQuery?.data.resolved_id]
   );
-
-  useEffect(() => {
-    !proxyWatch ? setProxyState(false) : setProxyState(true);
-  }, [proxyWatch]);
 
   return (
     <>
@@ -123,7 +119,14 @@ function Row({ index }: { index: number }) {
             ) : (
               <IconButton
                 disabled={!proxyWatch}
-                onClick={() => proxyQuery.refetch()}
+                onClick={() => {
+                  if (!proxyWatch) {
+                    setProxyState(false);
+                  } else {
+                    setProxyState(true);
+                    proxyQuery.refetch();
+                  }
+                }}
                 size="small"
                 title="Resolve id"
                 sx={{ p: "4px" }}

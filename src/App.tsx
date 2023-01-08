@@ -78,7 +78,11 @@ function TableWrapper() {
           </Grid>
         </Grid>
         <Box mt={5} display="flex" justifyContent="space-between">
-          <Button variant="contained" color="secondary" onClick={() => queryClient.refetchQueries()}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["sec_id"], stale: true })}
+          >
             Resolve ids
           </Button>
           <Button type="submit" variant="contained">
