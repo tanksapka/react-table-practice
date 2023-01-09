@@ -2,14 +2,16 @@ import { z } from "zod";
 import { Controller, useFormContext } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormControl, Input, Grid, CircularProgress, IconButton, Box, Typography } from "@mui/material";
-import { resolveId, SecMapResponse } from "../../utils/client";
-import { AxiosResponse } from "axios";
+import { resolveId } from "../../utils/client";
 import { CheckCircleOutline, ErrorOutline, Refresh } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 
 const RowSchema = z.object({
   sec_id: z.string({ required_error: "Security id is required!" }).trim().min(1, "Security id is required!"),
-  resolved_id: z.string().trim().min(1, "Resolved is has to be provided"),
+  resolved_id: z
+    .string({ required_error: "Resolved is has to be provided!" })
+    .trim()
+    .min(1, "Resolved is has to be provided!"),
   proxy_id: z
     .string()
     .trim()
@@ -33,7 +35,12 @@ function Row({ index }: { index: number }) {
 
   const queryClient = useQueryClient();
   const secQueryKey = ["sec_id", `sec_id_00${index}`];
-  const secQuery = queryClient.getQueryData<AxiosResponse<SecMapResponse, any>>(secQueryKey);
+  const [secState, setSecState] = useState(true);
+  const secQuery = useQuery({
+    queryKey: secQueryKey,
+    queryFn: () => resolveId(getValues().sec_list[index].sec_id as string),
+    enabled: secState,
+  });
   const secIsFetching = queryClient.isFetching(secQueryKey) > 0;
 
   const proxyQueryKey = ["sec_id", `proxy_id_00${index}`];
@@ -48,9 +55,9 @@ function Row({ index }: { index: number }) {
     () =>
       setValue(
         `sec_list.${index}.resolved_id` as const,
-        !!proxyWatch ? proxyQuery.data?.data.resolved_id || "" : secQuery?.data.resolved_id || ""
+        !!proxyWatch ? proxyQuery.data?.data.resolved_id || "" : secQuery.data?.data.resolved_id || ""
       ),
-    [setValue, index, proxyWatch, proxyQuery.data?.data.resolved_id, secQuery?.data.resolved_id]
+    [setValue, index, proxyWatch, proxyQuery.data?.data.resolved_id, secQuery.data?.data.resolved_id]
   );
 
   return (
@@ -122,8 +129,10 @@ function Row({ index }: { index: number }) {
                 onClick={() => {
                   if (!proxyWatch) {
                     setProxyState(false);
+                    setSecState(true);
                   } else {
                     setProxyState(true);
+                    setSecState(false);
                     proxyQuery.refetch();
                   }
                 }}
