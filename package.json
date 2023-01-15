@@ -32,7 +32,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --coverage",
     "eject": "react-scripts eject",
     "json.server": "json-server --watch db.json --host 127.0.0.1 --port 8000",
     "init.data": "echo {\"sec-map\": []} > db.json && tsc src\\dummy-data\\wrapper.ts && node src\\dummy-data\\wrapper.js && rm src\\dummy-data\\wrapper.js src\\dummy-data\\generate-dummy-data.js src\\utils\\client.js"
