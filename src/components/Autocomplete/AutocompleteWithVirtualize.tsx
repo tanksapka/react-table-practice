@@ -4,13 +4,24 @@ import {
   autocompleteClasses,
   ListSubheader,
   Popper,
+  PopperProps,
   styled,
   TextField,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { createContext, forwardRef, HTMLAttributes, ReactNode, Ref, useContext, useEffect, useRef } from "react";
+import {
+  createContext,
+  forwardRef,
+  HTMLAttributes,
+  JSXElementConstructor,
+  ReactNode,
+  Ref,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 import { generateRowItems, SecItem } from "../../dummy-data/generate-row-items";
 
 const LISTBOX_PADDING = 8; // px
@@ -135,7 +146,7 @@ function AutocompleteWithVirtualize() {
     <Autocomplete
       id="virtualize-demo"
       disableListWrap
-      PopperComponent={StyledPopper}
+      PopperComponent={StyledPopper as unknown as JSXElementConstructor<PopperProps>}
       ListboxComponent={forwardRef(
         (listboxProps: HTMLAttributes<HTMLElement>, ref: Ref<HTMLDivElement> | undefined) => (
           <ListboxComponent {...listboxProps} ref={ref} renderRow={renderSecRow} />
