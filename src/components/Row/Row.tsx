@@ -29,9 +29,7 @@ const RowDefault = {
 };
 
 function Row({ index }: { index: number }) {
-  const { control, getValues, setValue, watch } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
-  const resolvedIdWatch = watch(`sec_list.${index}.resolved_id` as const);
-  const proxyWatch = watch(`sec_list.${index}.proxy_id` as const);
+  const { control, getValues, setValue } = useFormContext<{ sec_list: RowSchemaInputType[] }>();
 
   const queryClient = useQueryClient();
   const secQueryKey = ["sec_id", `sec_id_00${index}`];
@@ -55,33 +53,27 @@ function Row({ index }: { index: number }) {
     () =>
       setValue(
         `sec_list.${index}.resolved_id` as const,
-        !!proxyWatch ? proxyQuery.data?.data.resolved_id || "" : secQuery.data?.data.resolved_id || ""
+        proxyQuery.data?.data.resolved_id || secQuery.data?.data.resolved_id || ""
       ),
-    [setValue, index, proxyWatch, proxyQuery.data?.data.resolved_id, secQuery.data?.data.resolved_id]
+    [setValue, index, proxyQuery.data?.data.resolved_id, secQuery.data?.data.resolved_id]
   );
 
   return (
     <>
       {index === 0 && (
-        <Grid container columns={{ xs: 4, sm: 8, md: 12 }} sx={{ borderBottom: "1px solid rgba(0, 0, 0, 0.42)}" }}>
+        <Grid container columns={{ xs: 3, sm: 6, md: 12 }} sx={{ borderBottom: "1px solid rgba(0, 0, 0, 0.42)}" }}>
           <Grid item xs={1} sm={2} md={4}>
             <Typography textAlign="center">Security Id</Typography>
           </Grid>
-          <Grid item xs={1} sm={2} md={3}>
+          <Grid item xs={1} sm={2} md={4}>
             <Typography textAlign="center">Resolved Id</Typography>
           </Grid>
-          <Grid item xs={1} sm={2} md={3}>
+          <Grid item xs={1} sm={2} md={4}>
             <Typography textAlign="center">Proxy Id</Typography>
-          </Grid>
-          <Grid item xs={1} sm={1} md={1}>
-            <Typography textAlign="center">Status</Typography>
-          </Grid>
-          <Grid item xs={1} sm={1} md={1}>
-            <Typography textAlign="center">Refresh</Typography>
           </Grid>
         </Grid>
       )}
-      <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
+      <Grid container columns={{ xs: 3, sm: 6, md: 12 }}>
         <Grid item xs={1} sm={2} md={4}>
           <FormControl fullWidth sx={{ py: "1px" }}>
             <Controller
@@ -92,58 +84,66 @@ function Row({ index }: { index: number }) {
             />
           </FormControl>
         </Grid>
-        <Grid item xs={1} sm={2} md={3}>
+        <Grid item xs={1} sm={2} md={4}>
           <FormControl fullWidth sx={{ py: "1px" }}>
             <Controller
               control={control}
               name={`sec_list.${index}.resolved_id` as const}
               defaultValue=""
-              render={({ field }) => <Input placeholder="resolved_id" readOnly {...field} />}
+              render={({ field }) => (
+                <Input
+                  placeholder="resolved_id"
+                  readOnly
+                  {...field}
+                  endAdornment={!!field.value ? <CheckCircleOutline color="success" /> : <ErrorOutline color="error" />}
+                  error={!field.value}
+                  sx={{ pr: "0.5rem" }}
+                />
+              )}
             />
           </FormControl>
         </Grid>
-        <Grid item xs={1} sm={2} md={3}>
+        <Grid item xs={1} sm={2} md={4}>
           <FormControl fullWidth sx={{ py: "1px" }}>
             <Controller
               control={control}
               name={`sec_list.${index}.proxy_id` as const}
               defaultValue=""
-              render={({ field }) => <Input placeholder="proxy_id" {...field} autoComplete="off" />}
+              render={({ field }) => (
+                <Input
+                  placeholder="proxy_id"
+                  {...field}
+                  autoComplete="off"
+                  endAdornment={
+                    secIsFetching ? (
+                      <Box p="5px">
+                        <CircularProgress size={18} />
+                      </Box>
+                    ) : (
+                      <IconButton
+                        disabled={!field.value}
+                        onClick={() => {
+                          if (!field.value) {
+                            setProxyState(false);
+                            setSecState(true);
+                          } else {
+                            setProxyState(true);
+                            setSecState(false);
+                            proxyQuery.refetch();
+                          }
+                        }}
+                        size="small"
+                        title="Resolve id"
+                        sx={{ p: "4px" }}
+                      >
+                        <Refresh color={!!field.value ? "secondary" : "disabled"} />
+                      </IconButton>
+                    )
+                  }
+                />
+              )}
             />
           </FormControl>
-        </Grid>
-        <Grid item xs={1} sm={1} md={1}>
-          <Box display="flex" p="4px" justifyContent="center" borderBottom="1px solid rgba(0, 0, 0, 0.42)}">
-            {!!resolvedIdWatch ? <CheckCircleOutline color="success" /> : <ErrorOutline color="error" />}
-          </Box>
-        </Grid>
-        <Grid item xs={1} sm={1} md={1}>
-          <Box display="flex" justifyContent="center" borderBottom="1px solid rgba(0, 0, 0, 0.42)}">
-            {secIsFetching ? (
-              <Box p="5px">
-                <CircularProgress size={18} />
-              </Box>
-            ) : (
-              <IconButton
-                disabled={!proxyWatch}
-                onClick={() => {
-                  if (!proxyWatch) {
-                    setProxyState(false);
-                    setSecState(true);
-                  } else {
-                    setProxyState(true);
-                    setSecState(false);
-                    proxyQuery.refetch();
-                  }
-                }}
-                size="small"
-                title="Resolve id"
-                sx={{ p: "4px" }}
-              >
-                <Refresh color={!!proxyWatch ? "secondary" : "disabled"} />
-              </IconButton>
-            )}
-          </Box>
         </Grid>
       </Grid>
     </>
