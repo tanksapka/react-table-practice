@@ -9,6 +9,7 @@ import { generateRowItems } from "./dummy-data/generate-row-items";
 import CountrySelect from "./components/CountrySelect/CountrySelect";
 import { AutocompleteWithLoadingState } from "./components/Autocomplete/AutocompleteWithLoadingState";
 import { AutocompleteWithVirtualize } from "./components/Autocomplete/AutocompleteWithVirtualize";
+import { Table } from "./components/Table/Table";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,9 @@ function TableWrapper() {
             {rowList.fields.map((_, index) => (
               <Row key={index} index={index} />
             ))}
+          </Grid>
+          <Grid item width="100%">
+            <Table />
           </Grid>
         </Grid>
         <Box mt={5} display="flex" justifyContent="space-between">
