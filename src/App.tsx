@@ -64,11 +64,11 @@ function TableWrapper() {
             </Typography>
             <CountrySelect />
           </Grid>
-          <Grid item width="100%">
+          {/* <Grid item width="100%">
             {rowList.fields.map((_, index) => (
               <Row key={index} index={index} />
             ))}
-          </Grid>
+          </Grid> */}
           <Grid item width="100%">
             <Table />
           </Grid>
